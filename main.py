@@ -98,7 +98,7 @@ for i, frame in enumerate(framelist):
     if k == 27:
         break
     time.sleep(0.1)
-    vout.write(np.concatenate((image, map_resized + ellipses), axis=0))
+    vout.write(np.concatenate((image_ellipses, map_ellipses), axis=0))
 
 vout.release()
     # break
