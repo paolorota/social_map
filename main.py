@@ -65,14 +65,15 @@ framelist = read_jsonList(list_file)
 homography = readBehaveHomo(homography_file)
 
 map = cv2.imread(map_file)
+map_resized = cv2.resize(map, (640, 480))
 cv2.namedWindow('image')
 cv2.namedWindow('map')
 vout = cv2.VideoWriter(fileout, fourcc=cv2.VideoWriter_fourcc('m','p','4','v'), fps=5, frameSize=(640, 480*2))
-colorOK = (0, 255, 255, 0.8)
-colorNO = (0, 0, 255, 0.8)
+colorOK = (0, 255, 255)
+colorNO = (0, 0, 255)
 for i, frame in enumerate(framelist):
     image = cv2.imread(frame['file'])
-    mtmpmap = np.copy(map)
+    ellipses = np.zeros_like(map)
     # sz = list(image.shape[:2])
     dists = find_distances(frame['skels'])
     for j, points in enumerate(frame['skels']):
@@ -84,16 +85,20 @@ for i, frame in enumerate(framelist):
         tmpc = colorOK
         if np.any(dists[j, :] < threshold * 2):
             tmpc = colorNO
-        mtmpmap = cv2.circle(mtmpmap, dst, threshold, tmpc, thickness=-1)
-    # frameout = cv2.warpPerspective(image, homography, dsize=(image.shape[1], image.shape[0]), flags=cv2.INTER_LINEAR)
-    mtmpmap = cv2.resize(mtmpmap, (640, 480))
+        ellipses = cv2.circle(ellipses, dst, threshold, tmpc, thickness=-1)
+    i_homo = np.linalg.inv(homography)
+    ellipses = cv2.resize(ellipses, (640, 480))
+    warped_ellipses = cv2.warpPerspective(ellipses, i_homo, dsize=(image.shape[1], image.shape[0]), flags=cv2.INTER_LINEAR)
+    image_ellipses = np.clip(image + warped_ellipses, 0, 255)
+    map_ellipses = np.clip(map_resized + ellipses, 0, 255)
     cv2.imshow('image', image)
-    cv2.imshow('map', mtmpmap)
+    cv2.imshow('map', map_ellipses)
     k = cv2.waitKey(20) & 0xFF
+    # cv2.waitKey(0)
     if k == 27:
         break
     time.sleep(0.1)
-    vout.write(np.concatenate((image, mtmpmap), axis=0))
+    vout.write(np.concatenate((image, map_resized + ellipses), axis=0))
 
 vout.release()
     # break
