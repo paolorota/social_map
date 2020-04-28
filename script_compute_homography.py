@@ -1,6 +1,11 @@
 import cv2
 import numpy as np
 
+
+sample_image = '/data/social_map/behave01/0001.png'
+sample_map = '/data/social_map/map_behave.png'
+homo_filename = '/data/social_map/homo_behave.txt'
+
 mouseX = 0
 mouseY = 0
 points_original = list()
@@ -24,7 +29,7 @@ def draw_circle_map(event, x, y, flags, param):
         print('x = {}, y = {}'.format(mouseX, mouseY))
         points_map.append([x, y])
 
-sample_image = '/data/social_map/behave01/0001.png'
+
 img = cv2.imread(sample_image)
 
 cv2.namedWindow('image')
@@ -37,7 +42,7 @@ while(1):
         break
 
 ## generating map
-map = cv2.imread('/data/social_map/map_behave.png')
+map = cv2.imread(sample_map)
 # map = np.zeros_like(img, dtype=np.uint8)
 dist = 20
 width = map.shape[0]
@@ -65,10 +70,6 @@ h, status = cv2.findHomography(src, dst, method=cv2.RANSAC)
 print(h)
 cv2.destroyAllWindows()
 
-# h = [[ 1.105, 7.21322273e-01, -1.53440678e+02],
-#      [-2.80265226e-02, 9.18945326e-01, 1.10969076e+02],
-#      [ 3.91601913e-04, -2.86681781e-04, 1.00000000e+00]]
-
 # h = np.asarray(h)
 warped = cv2.warpPerspective(img, h, dsize=(img.shape[1], img.shape[0]), flags=cv2.INTER_LINEAR)
 cv2.namedWindow('warped')
@@ -78,5 +79,5 @@ while(1):
     if k == 27:
         break
 
-with open('/data/social_map/homo_behave.txt', 'w') as of:
+with open(homo_filename, 'w') as of:
     h.tofile(of, " ")
